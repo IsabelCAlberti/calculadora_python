@@ -1,5 +1,6 @@
 import math
 
+# Agora vamos guardar operações como tuplas: (operação, num1, num2, resultado)
 historico_calculadora = []
 operacoes_desfeitas = []
 
@@ -14,11 +15,11 @@ def realizar_operacao():
                 continue
 
             if operacao_realizada == "r":
-                num1 = float(input("Digite o número para a raiz quadrada: "))
-                if num1 >= 0:
-                    resultado = math.sqrt(num1)
-                    print(f"A raiz quadrada de {num1} é {resultado}")
-                    historico_calculadora.append(f"√{num1} = {resultado}")
+                num = float(input("Digite o número para a raiz quadrada: "))
+                if num >= 0:
+                    resultado = math.sqrt(num)
+                    print(f"A raiz quadrada de {num} é {resultado}")
+                    historico_calculadora.append(("r", num, None, resultado))
                 else:
                     print("Erro: não existe raiz quadrada real de número negativo!")
                     continue
@@ -28,16 +29,15 @@ def realizar_operacao():
                 porcentagem = float(input("Digite a porcentagem: "))
                 resultado = valor * (porcentagem / 100)
                 print(f"{porcentagem}% de {valor} é {resultado}")
-                historico_calculadora.append(f"{porcentagem}% de {valor} = {resultado}")
+                historico_calculadora.append(("%", valor, porcentagem, resultado))
 
             elif operacao_realizada == "m":
                 num1 = float(input("Digite o primeiro número (dividendo): "))
                 num2 = float(input("Digite o segundo número (divisor): "))
-                
                 if num2 != 0:
                     resultado = num1 % num2
                     print(f"O resto da divisão de {num1} por {num2} é {resultado}")
-                    historico_calculadora.append(f"{num1} % {num2} = {resultado}")
+                    historico_calculadora.append(("m", num1, num2, resultado))
                 else:
                     print("Erro: divisão por zero!")
                     continue
@@ -61,8 +61,11 @@ def realizar_operacao():
                 elif operacao_realizada == "**":
                     resultado = num1 ** num2
 
-                print("Resultado:", resultado)
-                historico_calculadora.append(f"{num1} {operacao_realizada} {num2} = {resultado}")
+                print(f"Resultado: {resultado}")
+                historico_calculadora.append((operacao_realizada, num1, num2, resultado))
+
+            # Limpa refazer se houver nova operação
+            operacoes_desfeitas.clear()
 
         except ValueError:
             print("Erro: você deve digitar números válidos.")
@@ -72,7 +75,6 @@ def realizar_operacao():
         if cont.lower() != "s":
             break  
 
-        
 def menu_operacoes():
     print("""
 Operações disponíveis:
@@ -84,21 +86,27 @@ Operações disponíveis:
 ║ /   Divisão              ║
 ║ *   Multiplicação        ║
 ║ **  Potênciação          ║
-║ r   Raiz Quadrada     
+║ r   Raiz Quadrada        ║
 ║ %   Porcentagem          ║
 ║ m   Módulo               ║
 ╚══════════════════════════╝
     """)
-    
-    
-        
+
 def mostrar_historico():
     if not historico_calculadora:
         print("Histórico vazio.")
     else:
-        print("\n Histórico de Operações:")
-        for item in historico_calculadora:
-            print(" -", item)
+        print("\nHistórico de Operações:")
+        for op in historico_calculadora:
+            operacao, num1, num2, resultado = op
+            if operacao == "r":
+                print(f"√{num1} = {resultado}")
+            elif operacao == "%":
+                print(f"{num2}% de {num1} = {resultado}")
+            elif operacao == "m":
+                print(f"{num1} % {num2} = {resultado}")
+            else:
+                print(f"{num1} {operacao} {num2} = {resultado}")
 
 def apagar_historico():
     if historico_calculadora:
@@ -112,15 +120,40 @@ def desfazer_operacao():
     if historico_calculadora:
         ultima = historico_calculadora.pop()
         operacoes_desfeitas.append(ultima)
-        print(f"Operação desfeita: {ultima}")
+        print("Operação desfeita.")
     else:
         print("Nada a desfazer.")
 
 def refazer_operacao():
     if operacoes_desfeitas:
-        refazer = operacoes_desfeitas.pop()
-        historico_calculadora.append(refazer)
-        print(f"Operação refeita: {refazer}")
+        operacao, num1, num2, resultado = operacoes_desfeitas.pop()
+        # Recalcula o resultado
+        if operacao == "+":
+            resultado = num1 + num2
+        elif operacao == "-":
+            resultado = num1 - num2
+        elif operacao == "*":
+            resultado = num1 * num2
+        elif operacao == "/":
+            if num2 != 0:
+                resultado = num1 / num2
+            else:
+                print("Erro: divisão por zero!")
+                return
+        elif operacao == "**":
+            resultado = num1 ** num2
+        elif operacao == "r":
+            resultado = math.sqrt(num1)
+        elif operacao == "%":
+            resultado = num1 * (num2 / 100)
+        elif operacao == "m":
+            if num2 != 0:
+                resultado = num1 % num2
+            else:
+                print("Erro: divisão por zero!")
+                return
+        historico_calculadora.append((operacao, num1, num2, resultado))
+        print("Operação refeita.")
     else:
         print("Nada a refazer.")
 
@@ -135,7 +168,7 @@ def menu():
 ║ 3. Apagar histórico      ║
 ║ 4. Desfazer operação     ║
 ║ 5. Refazer operação      ║
-║ 6. Sair                  ║
+║ 6. Sair                   ║
 ╚══════════════════════════╝
 """)
         opcao_menu = input("Escolha uma opção: ")
@@ -153,7 +186,7 @@ def menu():
                 refazer_operacao()
             case "6":
                 print("\nEncerrando programa...")
-                print("\n Histórico Final:")
+                print("\nHistórico Final:")
                 mostrar_historico()
                 break
             case _:
